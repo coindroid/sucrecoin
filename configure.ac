@@ -1,11 +1,11 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
-define(_CLIENT_VERSION_MAJOR, 0)
-define(_CLIENT_VERSION_MINOR, 16)
-define(_CLIENT_VERSION_REVISION, 0)
+define(_CLIENT_VERSION_MAJOR, 2)
+define(_CLIENT_VERSION_MINOR, 0)
+define(_CLIENT_VERSION_REVISION, 1)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
-define(_COPYRIGHT_YEAR, 2017)
+define(_COPYRIGHT_YEAR, 2018)
 define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Sucrecoin Core]])
 AC_INIT([Sucrecoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/SucrecoinProject/Sucrecoin/issues],[sucrecoin],[https://sucrecoin.org/])
@@ -164,7 +164,7 @@ AC_ARG_ENABLE([lcov],
   [enable lcov testing (default is no)])],
   [use_lcov=yes],
   [use_lcov=no])
-  
+
 AC_ARG_ENABLE([lcov-branch-coverage],
   [AS_HELP_STRING([--enable-lcov-branch-coverage],
   [enable lcov testing branch coverage (default is no)])],
@@ -289,11 +289,17 @@ CXXFLAGS="$TEMP_CXXFLAGS"
 
 CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
-AC_ARG_WITH([utils],
-  [AS_HELP_STRING([--with-utils],
-  [build sucrecoin-cli sucrecoin-tx (default=yes)])],
-  [build_sucrecoin_utils=$withval],
-  [build_sucrecoin_utils=yes])
+AC_ARG_WITH([cli],
+  [AS_HELP_STRING([--with-cli],
+  [build sucrecoin-cli (default=yes)])],
+  [build_sucrecoin_cli=$withval],
+  [build_sucrecoin_cli=yes])
+
+AC_ARG_WITH([tx],
+  [AS_HELP_STRING([--with-tx],
+  [build sucrecoin-tx (default=no)])],
+  [build_sucrecoin_tx=$withval],
+  [build_sucrecoin_tx=no])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -433,13 +439,15 @@ case $host in
        esac
      fi
 
-     AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"])
+     AX_CHECK_LINK_FLAG([[-lboost_system -Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -lboost_system -Wl,-headerpad_max_install_names"])
      CPPFLAGS="$CPPFLAGS -DMAC_OSX"
      OBJCXXFLAGS="$CXXFLAGS"
      ;;
    *linux*)
      TARGET_OS=linux
      LEVELDB_TARGET_FLAGS="-DOS_LINUX"
+     CXXFLAGS="$TEMP_CXXFLAGS -fPIC"
+CPPFLAGS="$CPPFLAGS -fPIC"
      ;;
    *freebsd*)
      LEVELDB_TARGET_FLAGS="-DOS_FREEBSD"
@@ -544,6 +552,8 @@ if test x$use_glibc_compat != xno; then
     [ fdelt_type="long int"])
   AC_MSG_RESULT($fdelt_type)
   AC_DEFINE_UNQUOTED(FDELT_TYPE, $fdelt_type,[parameter and return value type for __fdelt_chk])
+  AX_CHECK_LINK_FLAG([[-Wl,--wrap=__divmoddi4]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=__divmoddi4"])
+  AX_CHECK_LINK_FLAG([[-Wl,--wrap=log2f]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=log2f"])
 else
   AC_SEARCH_LIBS([clock_gettime],[rt])
 fi
@@ -724,7 +734,7 @@ SUCRECOIN_QT_INIT
 dnl sets $sucrecoin_enable_qt, $sucrecoin_enable_qt_test, $sucrecoin_enable_qt_dbus
 SUCRECOIN_QT_CONFIGURE([$use_pkgconfig], [qt5])
 
-if test x$build_sucrecoin_utils$build_sucrecoind$sucrecoin_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_sucrecoin_cli$build_sucrecoin_tx$build_sucrecoind$sucrecoin_enable_qt$use_tests$use_bench = xnononononono; then
     use_boost=no
 else
     use_boost=yes
@@ -910,7 +920,7 @@ if test x$use_pkgconfig = xyes; then
       if test x$use_qr != xno; then
         SUCRECOIN_QT_CHECK([PKG_CHECK_MODULES([QR], [libqrencode], [have_qrencode=yes], [have_qrencode=no])])
       fi
-      if test x$build_sucrecoin_utils$build_sucrecoind$sucrecoin_enable_qt$use_tests != xnononono; then
+      if test x$build_sucrecoin_cli$build_sucrecoin_tx$build_sucrecoind$sucrecoin_enable_qt$use_tests != xnonononono; then
         PKG_CHECK_MODULES([EVENT], [libevent],, [AC_MSG_ERROR(libevent not found.)])
         if test x$TARGET_OS != xwindows; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
@@ -935,7 +945,7 @@ else
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 
-  if test x$build_sucrecoin_utils$build_sucrecoind$sucrecoin_enable_qt$use_tests != xnononono; then
+  if test x$build_sucrecoin_cli$build_sucrecoin_tx$build_sucrecoind$sucrecoin_enable_qt$use_tests != xnonononono; then
     AC_CHECK_HEADER([event2/event.h],, AC_MSG_ERROR(libevent headers missing),)
     AC_CHECK_LIB([event],[main],EVENT_LIBS=-levent,AC_MSG_ERROR(libevent missing))
     if test x$TARGET_OS != xwindows; then
@@ -984,7 +994,7 @@ dnl univalue check
 
 need_bundled_univalue=yes
 
-if test x$build_sucrecoin_utils$build_sucrecoind$sucrecoin_enable_qt$use_tests$use_bench = xnonononono; then
+if test x$build_sucrecoin_cli$build_sucrecoin_tx$build_sucrecoind$sucrecoin_enable_qt$use_tests$use_bench = xnonononono; then
   need_bundled_univalue=no
 else
 
@@ -1034,9 +1044,13 @@ AC_MSG_CHECKING([whether to build sucrecoind])
 AM_CONDITIONAL([BUILD_SUCRECOIND], [test x$build_sucrecoind = xyes])
 AC_MSG_RESULT($build_sucrecoind)
 
-AC_MSG_CHECKING([whether to build utils (sucrecoin-cli sucrecoin-tx)])
-AM_CONDITIONAL([BUILD_SUCRECOIN_UTILS], [test x$build_sucrecoin_utils = xyes])
-AC_MSG_RESULT($build_sucrecoin_utils)
+AC_MSG_CHECKING([whether to build sucrecoin-cli])
+AM_CONDITIONAL([BUILD_SUCRECOIN_CLI], [test x$build_sucrecoin_cli = xyes])
+AC_MSG_RESULT($build_sucrecoin_cli)
+
+AC_MSG_CHECKING([whether to build sucrecoin-tx])
+AM_CONDITIONAL([BUILD_SUCRECOIN_TX], [test x$build_sucrecoin_tx = xyes])
+AC_MSG_RESULT($build_sucrecoin_tx)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_SUCRECOIN_LIBS], [test x$build_sucrecoin_libs = xyes])
@@ -1162,8 +1176,8 @@ else
   AC_MSG_RESULT([no])
 fi
 
-if test x$build_sucrecoin_utils$build_sucrecoin_libs$build_sucrecoind$sucrecoin_enable_qt$use_bench$use_tests = xnononononono; then
-  AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
+if test x$build_sucrecoin_cli$build_sucrecoin_tx$build_sucrecoin_libs$build_sucrecoind$sucrecoin_enable_qt$use_bench$use_tests = xnonononononono; then
+  AC_MSG_ERROR([No targets! Please specify at least one of: --with-cli --with-tx --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
@@ -1206,6 +1220,7 @@ AC_SUBST(SUCRECOIN_CLI_NAME)
 AC_SUBST(SUCRECOIN_TX_NAME)
 
 AC_SUBST(RELDFLAGS)
+AC_SUBST(COMPAT_LDFLAGS)
 AC_SUBST(ERROR_CXXFLAGS)
 AC_SUBST(HARDENED_CXXFLAGS)
 AC_SUBST(HARDENED_CPPFLAGS)
@@ -1234,6 +1249,7 @@ AC_CONFIG_FILES([doc/Doxyfile])
 AC_CONFIG_LINKS([contrib/filter-lcov.py:contrib/filter-lcov.py])
 AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/util/sucrecoin-util-test.py:test/util/sucrecoin-util-test.py])
+AC_CONFIG_LINKS([src/crypto/md_helper.c:src/crypto/md_helper.c])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.
@@ -1286,30 +1302,32 @@ case ${OS} in
    ;;
 esac
 
-echo 
-echo "Options used to compile and link:"
-echo "  with wallet   = $enable_wallet"
-echo "  with gui / qt = $sucrecoin_enable_qt"
-if test x$sucrecoin_enable_qt != xno; then
-    echo "    qt version  = $sucrecoin_qt_got_major_vers"
-    echo "    with qr     = $use_qr"
-fi
-echo "  with zmq      = $use_zmq"
-echo "  with test     = $use_tests"
-echo "  with bench    = $use_bench"
-echo "  with upnp     = $use_upnp"
-echo "  use asm       = $use_asm"
-echo "  debug enabled = $enable_debug"
-echo "  werror        = $enable_werror"
-echo 
-echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
 echo
-echo "  CC            = $CC"
-echo "  CFLAGS        = $CFLAGS"
-echo "  CPPFLAGS      = $CPPFLAGS"
-echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $CXXFLAGS"
-echo "  LDFLAGS       = $LDFLAGS"
-echo "  ARFLAGS       = $ARFLAGS"
-echo 
+echo "Options used to compile and link:"
+echo "  build sucrecoin-cli = $build_sucrecoin_cli"
+echo "  build sucrecoin-tx  = $build_sucrecoin_tx"
+echo "  with wallet     = $enable_wallet"
+echo "  with gui / qt   = $sucrecoin_enable_qt"
+if test x$sucrecoin_enable_qt != xno; then
+    echo "    qt version    = $sucrecoin_qt_got_major_vers"
+    echo "    with qr       = $use_qr"
+fi
+echo "  with zmq        = $use_zmq"
+echo "  with test       = $use_tests"
+echo "  with bench      = $use_bench"
+echo "  with upnp       = $use_upnp"
+echo "  use asm         = $use_asm"
+echo "  debug enabled   = $enable_debug"
+echo "  werror          = $enable_werror"
+echo
+echo "  target os       = $TARGET_OS"
+echo "  build os        = $BUILD_OS"
+echo
+echo "  CC              = $CC"
+echo "  CFLAGS          = $CFLAGS"
+echo "  CPPFLAGS        = $CPPFLAGS"
+echo "  CXX             = $CXX"
+echo "  CXXFLAGS        = $CXXFLAGS"
+echo "  LDFLAGS         = $LDFLAGS"
+echo "  ARFLAGS         = $ARFLAGS"
+echo

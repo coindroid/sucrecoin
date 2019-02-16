@@ -16,7 +16,7 @@ class TestSucrecoinCli(SucrecoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        self.log.info("Compare responses from getinfo RPC and `bitcoin-cli getinfo`")
+        self.log.info("Compare responses from getinfo RPC and `sucrecoin-cli getinfo`")
         cli_get_info = self.nodes[0].cli.getinfo()
         rpc_get_info = self.nodes[0].getinfo()
 

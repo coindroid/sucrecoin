@@ -63,6 +63,9 @@
 #include <QUrl>
 #else
 #include <QUrlQuery>
+#include <validation.h>
+#include <tinyformat.h>
+
 #endif
 
 const std::string SucrecoinGUI::DEFAULT_UIPLATFORM =
@@ -122,7 +125,8 @@ SucrecoinGUI::SucrecoinGUI(const PlatformStyle *_platformStyle, const NetworkSty
     modalOverlay(0),
     prevBlocks(0),
     spinnerFrame(0),
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    assetAction(0)
 {
     QSettings settings;
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
@@ -318,6 +322,15 @@ void SucrecoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
     tabGroup->addAction(historyAction);
 
+    /** XSR START */
+    assetAction = new QAction(platformStyle->SingleColorIcon(":/icons/open"), tr("&Assets"), this);
+    assetAction->setStatusTip(tr("Manage Assets"));
+    assetAction->setToolTip(assetAction->statusTip());
+    assetAction->setCheckable(true);
+    assetAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
+    tabGroup->addAction(assetAction);
+    /** XSR END */
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -333,6 +346,8 @@ void SucrecoinGUI::createActions()
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(assetAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(assetAction, SIGNAL(triggered()), this, SLOT(gotoAssetsPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);
@@ -467,6 +482,10 @@ void SucrecoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+
+        /** XSR START */
+        toolbar->addAction(assetAction);
+        /** XSR END */
         overviewAction->setChecked(true);
     }
 }
@@ -574,6 +593,10 @@ void SucrecoinGUI::setWalletActionsEnabled(bool enabled)
     usedSendingAddressesAction->setEnabled(enabled);
     usedReceivingAddressesAction->setEnabled(enabled);
     openAction->setEnabled(enabled);
+
+    /** XSR START */
+    assetAction->setEnabled(false);
+    /** XSR END */
 }
 
 void SucrecoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
@@ -717,6 +740,14 @@ void SucrecoinGUI::gotoVerifyMessageTab(QString addr)
 {
     if (walletFrame) walletFrame->gotoVerifyMessageTab(addr);
 }
+
+/** XSR START */
+void SucrecoinGUI::gotoAssetsPage()
+{
+    assetAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoAssetsPage();
+};
+/** XSR END */
 #endif // ENABLE_WALLET
 
 void SucrecoinGUI::updateNetworkState()
@@ -776,6 +807,13 @@ void SucrecoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nV
         else
             modalOverlay->tipUpdate(count, blockDate, nVerificationProgress);
     }
+
+#ifdef ENABLE_WALLET
+    if(walletFrame)
+        {
+            walletFrame->displayAssetInfo();
+        }
+#endif // ENABLE_WALLET
     if (!clientModel)
         return;
 
@@ -987,11 +1025,12 @@ void SucrecoinGUI::showEvent(QShowEvent *event)
 }
 
 #ifdef ENABLE_WALLET
-void SucrecoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label)
+void SucrecoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& assetName)
 {
     // On new transaction, make an info balloon
     QString msg = tr("Date: %1\n").arg(date) +
-                  tr("Amount: %1\n").arg(SucrecoinUnits::formatWithUnit(unit, amount, true)) +
+                  tr("Amount: %1\n").arg(amount) +
+                  tr("Asset: %1\n").arg(assetName) +
                   tr("Type: %1\n").arg(type);
     if (!label.isEmpty())
         msg += tr("Label: %1\n").arg(label);
@@ -999,6 +1038,21 @@ void SucrecoinGUI::incomingTransaction(const QString& date, int unit, const CAmo
         msg += tr("Address: %1\n").arg(address);
     message((amount)<0 ? tr("Sent transaction") : tr("Incoming transaction"),
              msg, CClientUIInterface::MSG_INFORMATION);
+}
+
+void SucrecoinGUI::checkAssets()
+{
+    // Check that status of RIP2 and activate the assets icon if it is active
+    if(AreAssetsDeployed()) {
+        assetAction->setDisabled(false);
+        assetAction->setToolTip(tr("Manage Assets"));
+        }
+    else {
+        assetAction->setDisabled(true);
+        assetAction->setToolTip(tr("Assets not yet active"));
+
+        }
+
 }
 #endif // ENABLE_WALLET
 

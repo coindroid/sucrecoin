@@ -46,8 +46,8 @@ const std::string CLIENT_NAME("Ayora");
 //! git will put "#define GIT_ARCHIVE 1" on the next line inside archives. 
 #define GIT_ARCHIVE 1
 #ifdef GIT_ARCHIVE
-#define GIT_COMMIT_ID "8e8ccb76d"
-#define GIT_COMMIT_DATE "Fri, 2 Mar 2018 23:09:00 -0700"
+#define GIT_COMMIT_ID "c2dab4890"
+#define GIT_COMMIT_DATE "Mon, 30 Jul 2018 16:51:20 -0600"
 #endif
 
 #define BUILD_DESC_WITH_SUFFIX(maj, min, rev, build, suffix) \

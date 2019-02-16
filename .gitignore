@@ -1,11 +1,15 @@
+buildspecs
+Jenkinsfile
 *.tar.gz
 
+*.exe
 src/sucrecoin
 src/sucrecoind
 src/sucrecoin-cli
 src/sucrecoin-tx
 src/test/test_sucrecoin
 src/test/test_sucrecoin_fuzzy
+src/test/test_sucrecoin_hash
 src/qt/test/test_sucrecoin-qt
 .vscode
 output.txt
@@ -37,7 +41,7 @@ src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
 
-src/univalue/gen
+
 
 src/qt/*.moc
 src/qt/moc_*.cpp
@@ -68,6 +72,7 @@ src/qt/test/moc*.cpp
 
 *.log
 *.trs
+*.dmg
 
 *.json.h
 *.raw.h
@@ -79,6 +84,7 @@ src/qt/test/moc*.cpp
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
+sucrecoin-qt
 Sucrecoin-Qt.app
 
 # Unit-tests
@@ -113,3 +119,7 @@ test/cache/*
 
 libsucrecoinconsensus.pc
 contrib/devtools/split-debug.sh
+.idea
+cmake-build-debug
+
+CMakeLists.txt

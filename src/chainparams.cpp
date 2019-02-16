@@ -117,7 +117,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        consensus.nSubsidyHalvingInterval = 1314000;  // ~5 yrs at 2 min block time
+        consensus.nSubsidyHalvingInterval = 1314000; // ~5 yrs at 2 min block time
         consensus.nBIP34Enabled = true;
         consensus.nBIP65Enabled = true; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.nBIP66Enabled = true;
@@ -133,7 +133,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
-
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].bit = 5;  //Assets (RIP2)
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nStartTime = 1540944000; // Oct 31, 2018
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nTimeout = 1572480000; // Oct 31, 2019
 
 
         // The best chain should have at least this much work.
@@ -168,24 +170,22 @@ public:
 
         consensus.hashGenesisBlock = genesis.GetHash();
 
-        assert(consensus.hashGenesisBlock == uint256S("0x0000007f55c62957973356eb69c5d9d262c9fb826bcab6b8c892bf07f67cfb74"));
-        assert(genesis.hashMerkleRoot == uint256S("0x1adf42174d3dfe33a34cf2dd09b37011fb77b853f0dfa074e45483306ae5e4e8"));
-        
-	vSeeds.emplace_back("dev.sucrecoin.org", false);
+        assert(consensus.hashGenesisBlock == uint256S("0000007f55c62957973356eb69c5d9d262c9fb826bcab6b8c892bf07f67cfb74"));
+        assert(genesis.hashMerkleRoot == uint256S("1adf42174d3dfe33a34cf2dd09b37011fb77b853f0dfa074e45483306ae5e4e8"));
+
+        vSeeds.emplace_back("dev.sucrecoin.org", false);
         vSeeds.emplace_back("dev1.sucrecoin.org", false);
         vSeeds.emplace_back("dev2.sucrecoin.org", false);
         vSeeds.emplace_back("dev3.sucrecoin.org", false);
         vSeeds.emplace_back("dev4.sucrecoin.org", false);
         vSeeds.emplace_back("dev5.sucrecoin.org", false);
-        vSeeds.emplace_back("dev6.sucrecoin.org", false); 
+        vSeeds.emplace_back("dev6.sucrecoin.org", false);
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,75);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,122);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
-
-        bech32_hrp = "su";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
@@ -207,6 +207,23 @@ public:
                         //   (the tx=... number in the SetBestChain debug.log lines)
             3.1         // * estimated number of transactions per second after that timestamp
         };
+
+        /** XSR Start **/
+        // Burn Amounts
+        nIssueAssetBurnAmount = 500 * COIN;
+        nReissueAssetBurnAmount = 100 * COIN;
+        nIssueSubAssetBurnAmount = 100 * COIN;
+        nIssueUniqueAssetBurnAmount = 5 * COIN;
+
+        // Burn Addresses
+        strIssueAssetBurnAddress = "RXissueAssetXXXXXXXXXXXXXXXXXhhZGt";
+        strReissueAssetBurnAddress = "RXReissueAssetXXXXXXXXXXXXXXVEFAWu";
+        strIssueSubAssetBurnAddress = "RXissueSubAssetXXXXXXXXXXXXXWcwhwL";
+        strIssueUniqueAssetBurnAddress = "RXissueUniqueAssetXXXXXXXXXXWEAe58";
+
+        //Global Burn Address
+        strGlobalBurnAddress = "RXBurnXXXXXXXXXXXXXXXXXXXXXXWUo9FV";
+        /** XSR End **/
     }
 };
 
@@ -225,15 +242,18 @@ public:
         consensus.nCSVEnabled = true;
 
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 1440 * 60; // 1 days
-        consensus.nPowTargetSpacing = 2 * 60;
+        consensus.nPowTargetTimespan = 2016 * 60; // 1.4 days
+        consensus.nPowTargetSpacing = 1 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1080; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 1440; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.nRuleChangeActivationThreshold = 1310; // Approx 65% for testchains
+        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].bit = 5;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nStartTime = 1532476800; // July 25, 2018 UTC
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nTimeout = 1564012800; // July 25, 2019 UTC
 
 
         // The best chain should have at least this much work.
@@ -262,8 +282,6 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "tr";
-
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
         fDefaultConsistencyChecks = false;
@@ -284,6 +302,22 @@ public:
             3.1         // * estimated number of transactions per second after that timestamp
         };
 
+        /** XSR Start **/
+        // Burn Amounts
+        nIssueAssetBurnAmount = 500 * COIN;
+        nReissueAssetBurnAmount = 100 * COIN;
+        nIssueSubAssetBurnAmount = 100 * COIN;
+        nIssueUniqueAssetBurnAmount = 5 * COIN;
+
+        // Burn Addresses
+        strIssueAssetBurnAddress = "n1issueAssetXXXXXXXXXXXXXXXXWdnemQ";
+        strReissueAssetBurnAddress = "n1ReissueAssetXXXXXXXXXXXXXXWG9NLd";
+        strIssueSubAssetBurnAddress = "n1issueSubAssetXXXXXXXXXXXXXbNiH6v";
+        strIssueUniqueAssetBurnAddress = "n1issueUniqueAssetXXXXXXXXXXS4695i";
+
+        // Global Burn Address
+        strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
+        /** XSR End **/
     }
 };
 
@@ -310,6 +344,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_ASSETS].nTimeout = 999999999999ULL;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
@@ -324,11 +361,8 @@ public:
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1510082300, 2, 0x207fffff, 4, 5000 * COIN);
+        genesis = CreateGenesisBlock(1524179366, 1, 0x207fffff, 4, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-
-        std::cout << "HGB: " << consensus.hashGenesisBlock.GetHex() << std::endl;
-        std::cout << "HGR: " << genesis.hashMerkleRoot.GetHex() << std::endl;
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
@@ -354,7 +388,23 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "rcrt";
+
+        /** XSR Start **/
+        // Burn Amounts
+        nIssueAssetBurnAmount = 500 * COIN;
+        nReissueAssetBurnAmount = 100 * COIN;
+        nIssueSubAssetBurnAmount = 100 * COIN;
+        nIssueUniqueAssetBurnAmount = 5 * COIN;
+
+        // Burn Addresses
+        strIssueAssetBurnAddress = "n1issueAssetXXXXXXXXXXXXXXXXWdnemQ";
+        strReissueAssetBurnAddress = "n1ReissueAssetXXXXXXXXXXXXXXWG9NLd";
+        strIssueSubAssetBurnAddress = "n1issueSubAssetXXXXXXXXXXXXXbNiH6v";
+        strIssueUniqueAssetBurnAddress = "n1issueUniqueAssetXXXXXXXXXXS4695i";
+
+        // Global Burn Address
+        strGlobalBurnAddress = "n1BurnXXXXXXXXXXXXXXXXXXXXXXU1qejP";
+        /** XSR End **/
     }
 };
 

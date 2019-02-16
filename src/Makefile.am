@@ -69,17 +69,26 @@ if BUILD_SUCRECOIND
   bin_PROGRAMS += sucrecoind
 endif
 
-if BUILD_SUCRECOIN_UTILS
-  bin_PROGRAMS += sucrecoin-cli sucrecoin-tx
+if BUILD_SUCRECOIN_CLI
+  bin_PROGRAMS += sucrecoin-cli
+endif
+
+if BUILD_SUCRECOIN_TX
+  bin_PROGRAMS += sucrecoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
 # sucrecoin core #
 SUCRECOIN_CORE_H = \
   addrdb.h \
+  addressindex.h \
+  spentindex.h \
+  timestampindex.h \
   addrman.h \
+  assets/assets.h \
+  assets/assetdb.h \
+  assets/assettypes.h \
   base58.h \
-  bech32.h \
   bloom.h \
   blockencodings.h \
   chain.h \
@@ -192,6 +201,7 @@ libsucrecoin_server_a_SOURCES = \
   blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/consensus.cpp \
   consensus/tx_verify.cpp \
   httprpc.cpp \
   httpserver.cpp \
@@ -202,11 +212,14 @@ libsucrecoin_server_a_SOURCES = \
   net.cpp \
   net_processing.cpp \
   noui.cpp \
+  assets/assets.cpp \
+  assets/assetdb.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   policy/rbf.cpp \
   pow.cpp \
   rest.cpp \
+  rpc/assets.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
   rpc/misc.cpp \
@@ -303,7 +316,7 @@ crypto_libsucrecoin_crypto_a_SOURCES = \
   crypto/sph_simd.h \
   crypto/sph_skein.h \
   crypto/sph_hamsi.h \
-  crypto/sph_fugue. h \
+  crypto/sph_fugue.h \
   crypto/sph_shabal.h \
   crypto/sph_whirlpool.h \
   crypto/sph_sha2.h \
@@ -355,7 +368,6 @@ libsucrecoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SUCRECOIN_INCLUDES)
 libsucrecoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsucrecoin_common_a_SOURCES = \
   base58.cpp \
-  bech32.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
@@ -399,6 +411,7 @@ libsucrecoin_util_a_SOURCES = \
 
 if GLIBC_BACK_COMPAT
 libsucrecoin_util_a_SOURCES += compat/glibc_compat.cpp
+AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
 # cli: shared between sucrecoin-cli and sucrecoin-qt
@@ -537,10 +550,6 @@ clean-local:
 	@test -f $(WINDRES)
 	## FIXME: How to get the appropriate modulename_CPPFLAGS in here?
 	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
-
-.mm.o:
-	$(AM_V_CXX) $(OBJCXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) -c -o $@ $<
 
 check-symbols: $(bin_PROGRAMS)
 if GLIBC_BACK_COMPAT
